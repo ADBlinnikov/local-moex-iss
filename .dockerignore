@@ -1,0 +1,6 @@
+.env
+.md
+.git*
+README.md
+Dockerfile
+postgres-data/
