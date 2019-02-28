@@ -1,1 +1,1 @@
-from .quandl import *
+from .iss import *

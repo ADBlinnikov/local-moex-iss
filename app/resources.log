@@ -1,0 +1,25 @@
+2019-02-20 18:53:18,549 [DEBUG] resources:
+Req: f{req}
+Resp: f{resp}
+Resource: f{resource}
+Params: f{params}
+2019-02-20 18:54:01,426 [DEBUG] resources:
+Req: f{req}
+Resp: f{resp}
+Resource: f{resource}
+Params: f{params}
+2019-02-20 18:55:27,505 [INFO] resources:
+Start task by params:
+method, engine, market, fromdate, todate
+2019-02-20 19:42:53,447 [INFO] resources:
+Start task by params:
+method
+2019-02-20 19:45:25,438 [INFO] resources:
+Start task by params:
+method
+2019-02-20 19:46:22,985 [INFO] resources:
+Start task by params:
+method
+2019-02-20 19:47:54,820 [INFO] resources:
+Start task by params:
+method

@@ -1,24 +1,32 @@
 import argparse
 import os
-
+import logging
 import falcon
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-from middleware import SQLAlchemySessionManager
-from resources import TimeSeriesResource
+from middleware import SQLAlchemySessionManager, Logger
+from resources import TestResource
 
-engine = sqlalchemy.create_engine(os.environ["DATABASE_URL"])
-session_factory = sessionmaker(bind=engine)
 
-app = falcon.API(middleware=[SQLAlchemySessionManager(session_factory)])
-app.add_route("/timeseries", TimeSeriesResource())
+def create():
+    # SQLAlchemy
+    engine = sqlalchemy.create_engine(os.environ["DATABASE_URL"], echo=True)
+    session_factory = sessionmaker(bind=engine)
+    # App
+    app = falcon.API(
+        middleware=[Logger(logging.DEBUG), SQLAlchemySessionManager(session_factory)]
+    )
+    # Routes
+    app.add_route("/test", TestResource())
+    return app
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", help="Run debug server", action="store_true")
     args = parser.parse_args()
+    app = create()
     if args.debug:
         from werkzeug.serving import run_simple
 

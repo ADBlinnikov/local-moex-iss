@@ -6,14 +6,16 @@ services:
     image: app
     env_file: .env
     restart: always
-    command: ["python", "app.py", "--debug"]
+    command:
+      - python
+      - app.py
+      - "--debug"
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - "./app:/app"
     depends_on:
-      - rabbitmq
-      - postgres
+      - worker
 
   worker:
     build: .
@@ -21,17 +23,33 @@ services:
     restart: always
     env_file: .env
     volumes:
-      - ./app:/app
+      - "./app:/app"
     command:
-      [
-        "celery",
-        "worker",
-        "--app=worker.app",
-        "--concurrency=1",
-        "--loglevel=INFO",
-      ]
+      - celery
+      - worker
+      - "--app=worker.app"
+      - "--concurrency=1"
+      - "--loglevel=INFO"
     depends_on:
       - postgres
+      - redis
+
+  monitor:
+    build: .
+    image: app
+    restart: always
+    env_file: .env
+    volumes:
+      - "./app:/app"
+    ports:
+      - "5555:5555"
+    command:
+      - flower
+      - "-A"
+      - "worker.app"
+      - "--logging=INFO"
+    depends_on:
+      - worker
 
   migrations:
     build: .
@@ -39,22 +57,24 @@ services:
     restart: "no"
     env_file: .env
     volumes:
-      - ./app:/app
-    command: ["alembic", "upgrade", "head"]
+      - "./app:/app"
+    command:
+      - alembic
+      - upgrade
+      - head
     depends_on:
       - postgres
 
-  rabbitmq:
-    image: rabbitmq:3-alpine
+  redis:
+    image: "redis:5-alpine"
     env_file: .env
-    hostname: "myrabbit"
     ports:
-      - 5672:5672
+      - "6379:6379"
 
   postgres:
-    image: postgres:11-alpine
+    image: "postgres:11-alpine"
     env_file: .env
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - "./postgres-data:/var/lib/postgresql/data"

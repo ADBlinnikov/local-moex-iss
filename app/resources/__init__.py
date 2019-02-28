@@ -1,1 +1,1 @@
-from .timeseries import TimeSeriesResource
+from .test import TestResource
