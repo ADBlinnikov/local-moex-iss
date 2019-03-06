@@ -1,9 +1,9 @@
-## Fetch Timeseries From Quandl With Celery and Falcon
+## Тестовый вариант загрузки данных с iss.moex.com
 
-1. Start stack: `docker-compose up -d`
+1. Для запуска стэка: `docker-compose up -d`
 
-2. Fetch timeseries from Quandl: `curl -d '{"database_code":"WIKI", "dataset_code":"FB"}' -H "Content-Type: application/json" -X POST http://localhost:8000`
+2. На данный момент доступ к функциям осуществляется через вызов тестового ресурса и передачи имени вызываемого метода и необходимых параметров. Например:
 
-3. List all timeseries: `curl -X GET http://localhost:8000`
+   - Для запуска загрузки исторических данных за период : `curl -X http://localhost:8000/test?method=get_history_daterange&fromdate=2019-01-01&todate=2019-01-31&engine=futures&market=forts`
 
-4. Retrieve a timeseries: `curl -X GET http://localhost:8000?id=<...>`
+   - Для обновления данных по отсутсвующим в базе кодам бумаг: `curl -X http://localhost:8000/test?method=get_securities`

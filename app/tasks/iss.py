@@ -70,7 +70,7 @@ def insert_to_database(self, data, mapper_name: str):
     elif isinstance(data, list) and all({isinstance(d, dict) for d in data}):
         mappings = data
     else:
-        raise NotImplementedError
+        raise ValueError
     mapper = getattr(models, mapper_name)
     self.session.bulk_insert_mappings(mapper, mappings)
     self.session.commit()
@@ -128,7 +128,7 @@ def get_history_tradedate(self, engine: str, market: str, date):
 def get_history_daterange(engine: str, market: str, fromdate, todate):
     date_range = pd.date_range(fromdate, todate).to_pydatetime()
     jobs = celery.group(
-        fetch_history_tradedate.si(engine=engine, market=market, date=date)
+        get_history_tradedate.si(engine=engine, market=market, date=date)
         for date in date_range
     )
     # Run
@@ -183,16 +183,26 @@ def fetch_security(self, security: str):
                 sec["option_type"] = "put"
         else:
             logger.error("Unable to parse ticker %s", str(sec))
-    return sec
+    # Conform mapper
+    result = {}
+    result["secid"] = sec.pop("secid")
+    result["data"] = sec
+    return result
 
 
 @app.task(bind=True, base=Task, name="get_securities")
 def get_securities(self):
     # Get missing securities
-    missing = (
-        self.session.query(History.secid, Securities.secid)
-        .outerjoin(Securities)
+    query_result = (
+        self.session.query(History.secid)
+        .outerjoin(Securities, History.secid == Securities.secid)
         .filter(Securities.secid.is_(None))
     )
-    return list(missing)
-    fetch_jobs = celery.group(fetch_security.si())
+    missing = query_result.all()
+    if missing:
+        pipeline = celery.chain(
+            celery.group(fetch_security.si(s) for s in missing),
+            insert_to_database.s(mapper_name="Securities"),
+        )
+        pipeline.apply_async()
+
